@@ -16,7 +16,7 @@ func Filter(r *bufio.Reader, filename string) error {
 	var filteredEntries []Entry
 	for _, entry := range har.Log.Entries {
 
-		if entry.Response.Content.MimeType == "application/json" || entry.Request.Method == "POST" {
+		if entry.Response.Content.MimeType == "application/json" || entry.Request.Method != "GET" {
 			filteredEntries = append(filteredEntries, entry)
 		}
 	}
