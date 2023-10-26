@@ -16,13 +16,15 @@ import (
 )
 
 // Fetch downloads all resources references in .har file
-func Fetch(r *bufio.Reader) error {
+func Fetch(r *bufio.Reader, outdir string) error {
 	har, err := Decode(r)
 
 	check(err)
 
 	datestring := time.Now().Format("20060102150405")
-	outdir := "." + string(filepath.Separator) + "hargo-fetch-" + datestring
+	if outdir == "" {
+		outdir = "." + string(filepath.Separator) + "hargo-fetch-" + datestring
+	}
 
 	err = os.Mkdir(outdir, 0777)
 

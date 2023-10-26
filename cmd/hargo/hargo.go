@@ -62,13 +62,19 @@ func main() {
 			UsageText:   "fetch - fetch all URLs",
 			Description: "fetch all URLs found in HAR file, saving all objects in an output directory",
 			ArgsUsage:   "<.har file> <output dir>",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "dir",
+					Usage: "output dir"},
+			},
 			Action: func(c *cli.Context) {
 				harFile := c.Args().First()
 				log.Infof("fetch .har file: %s", harFile)
 				file, err := os.Open(harFile)
 				if err == nil {
 					r := hargo.NewReader(file)
-					hargo.Fetch(r)
+					outDir := c.String("dir")
+					hargo.Fetch(r, outDir)
 				} else {
 					log.Fatal("Cannot open file: ", harFile)
 					os.Exit(-1)
