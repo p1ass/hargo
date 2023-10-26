@@ -31,6 +31,8 @@ func Fetch(r *bufio.Reader, outdir string) error {
 
 	check(err)
 
+	jar, _ := cookiejar.New(nil)
+
 	for i, entry := range har.Log.Entries {
 
 		// TODO create goroutine here to parallelize requests
@@ -45,15 +47,16 @@ func Fetch(r *bufio.Reader, outdir string) error {
 			}
 		}
 
-		for _, c := range entry.Request.Cookies {
-			cookie := &http.Cookie{Name: c.Name, Value: c.Value, HttpOnly: false, Domain: c.Domain}
-			req.AddCookie(cookie)
-		}
+		// for _, c := range entry.Request.Cookies {
+		// 	cookie := &http.Cookie{Name: c.Name, Value: c.Value, HttpOnly: false, Domain: c.Domain}
+		// 	req.AddCookie(cookie)
+		// }
 
 		// cookie := &http.Cookie{Name: "_hargo", Value: "true", HttpOnly: false}
 		// req.AddCookie(cookie)
 
-		err = downloadFile(req, outdir, i)
+		isJSON := entry.Response.Content.MimeType == "application/json"
+		err = downloadFile(req, outdir, i, isJSON, jar)
 
 		if err != nil {
 			log.Error(err)
@@ -64,7 +67,7 @@ func Fetch(r *bufio.Reader, outdir string) error {
 	return nil
 }
 
-func downloadFile(req *http.Request, outdir string, num int) error {
+func downloadFile(req *http.Request, outdir string, num int, isJSON bool, jar http.CookieJar) error {
 
 	fileName := path.Base(req.URL.Path)
 
@@ -73,6 +76,10 @@ func downloadFile(req *http.Request, outdir string, num int) error {
 	}
 
 	fileName = filepath.Join(outdir, strings.ReplaceAll(filepath.Join(fmt.Sprintf("%03d", num), filepath.Dir(req.URL.Path), fileName), "/", "_"))
+
+	if isJSON {
+		fileName += ".json"
+	}
 
 	if len(fileName) == 0 {
 		return nil
@@ -86,9 +93,7 @@ func downloadFile(req *http.Request, outdir string, num int) error {
 	}
 	defer file.Close()
 
-	jar, _ := cookiejar.New(nil)
-
-	jar.SetCookies(req.URL, req.Cookies())
+	// jar.SetCookies(req.URL, req.Cookies())
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := http.Client{
