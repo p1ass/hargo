@@ -28,9 +28,9 @@ func Fetch(r *bufio.Reader) error {
 
 	check(err)
 
-	for _, entry := range har.Log.Entries {
+	for i, entry := range har.Log.Entries {
 
-		//TODO create goroutine here to parallelize requests
+		// TODO create goroutine here to parallelize requests
 
 		fmt.Println("URL: " + entry.Request.URL)
 
@@ -47,10 +47,10 @@ func Fetch(r *bufio.Reader) error {
 			req.AddCookie(cookie)
 		}
 
-		//cookie := &http.Cookie{Name: "_hargo", Value: "true", HttpOnly: false}
-		//req.AddCookie(cookie)
+		// cookie := &http.Cookie{Name: "_hargo", Value: "true", HttpOnly: false}
+		// req.AddCookie(cookie)
 
-		err = downloadFile(req, outdir)
+		err = downloadFile(req, outdir, i)
 
 		if err != nil {
 			log.Error(err)
@@ -61,7 +61,7 @@ func Fetch(r *bufio.Reader) error {
 	return nil
 }
 
-func downloadFile(req *http.Request, outdir string) error {
+func downloadFile(req *http.Request, outdir string, num int) error {
 
 	fileName := path.Base(req.URL.Path)
 
@@ -69,7 +69,7 @@ func downloadFile(req *http.Request, outdir string) error {
 		fileName = "index.html"
 	}
 
-	fileName = outdir + string(filepath.Separator) + fileName
+	fileName = filepath.Join(outdir, strings.ReplaceAll(filepath.Join(fmt.Sprintf("%03d", num), filepath.Dir(req.URL.Path), fileName), "/", "_"))
 
 	if len(fileName) == 0 {
 		return nil
@@ -98,7 +98,7 @@ func downloadFile(req *http.Request, outdir string) error {
 	// spew.Dump(client)
 	// spew.Dump(req)
 
-	resp, err := client.Do(req) //.Get(rawURL) // add a filter to check redirect
+	resp, err := client.Do(req) // .Get(rawURL) // add a filter to check redirect
 
 	if err != nil {
 		log.Error(err)
