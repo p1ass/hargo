@@ -2,6 +2,7 @@ package hargo
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -89,12 +90,14 @@ func downloadFile(req *http.Request, outdir string, num int) error {
 
 	jar.SetCookies(req.URL, req.Cookies())
 
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	client := http.Client{
 		CheckRedirect: func(r *http.Request, via []*http.Request) error {
 			r.URL.Opaque = r.URL.Path
 			return nil
 		},
-		Jar: jar,
+		Jar:       jar,
+		Transport: http.DefaultTransport,
 	}
 
 	// spew.Dump(client)
