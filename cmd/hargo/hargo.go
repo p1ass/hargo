@@ -82,6 +82,26 @@ func main() {
 			},
 		},
 		{
+			Name:        "filter",
+			Usage:       "Filter .har file",
+			UsageText:   "Filter - filter .har file",
+			Description: "Content-Typeがapplication/jsonのもののみを抜き出します",
+			ArgsUsage:   "<.har file> <output filename>",
+			Action: func(c *cli.Context) {
+				harFile := c.Args().First()
+				outFilename := c.Args().Get(1)
+				log.Infof("fetch .har file: %s", harFile)
+				file, err := os.Open(harFile)
+				if err == nil {
+					r := hargo.NewReader(file)
+					hargo.Filter(r, outFilename)
+				} else {
+					log.Fatal("Cannot open file: ", harFile)
+					os.Exit(-1)
+				}
+			},
+		},
+		{
 			Name:        "curl",
 			Aliases:     []string{"c"},
 			Usage:       "Convert .har to curl",
