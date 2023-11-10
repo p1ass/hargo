@@ -3,6 +3,7 @@ package hargo
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,7 +43,7 @@ func Fetch(r *bufio.Reader, outdir string) error {
 		req, _ := http.NewRequest(entry.Request.Method, entry.Request.URL, nil)
 
 		for _, h := range entry.Request.Headers {
-			if !strings.HasPrefix(h.Name, ":") {
+			if !strings.HasPrefix(h.Name, ":") && h.Name != "Cookie" {
 				req.Header.Add(h.Name, h.Value)
 			}
 		}
@@ -116,13 +117,27 @@ func downloadFile(req *http.Request, outdir string, num int, isJSON bool, jar ht
 	}
 	defer resp.Body.Close()
 
-	size, err := io.Copy(file, resp.Body)
+	if isJSON {
+		var bs any
+		if err := json.NewDecoder(resp.Body).Decode(&bs); err != nil {
+			log.Error(err)
+			return err
+		}
+		enc := json.NewEncoder(file)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(bs); err != nil {
+			log.Error(err)
+			return err
+		}
+	} else {
 
-	if err != nil {
-		log.Error(err)
-		return err
+		size, err := io.Copy(file, resp.Body)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+		fmt.Printf("Downloaded %s [%v bytes]\n", fileName, size)
 	}
 
-	fmt.Printf("Downloaded %s [%v bytes]\n", fileName, size)
 	return nil
 }
