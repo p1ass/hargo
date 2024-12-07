@@ -40,7 +40,12 @@ func Fetch(r *bufio.Reader, outdir string) error {
 
 		fmt.Println("URL: " + entry.Request.URL)
 
-		req, _ := http.NewRequest(entry.Request.Method, entry.Request.URL, nil)
+		var req *http.Request
+		if entry.Request.Method != http.MethodGet {
+			req, _ = http.NewRequest(entry.Request.Method, entry.Request.URL, strings.NewReader(entry.Request.PostData.Text))
+		} else {
+			req, _ = http.NewRequest(entry.Request.Method, entry.Request.URL, nil)
+		}
 
 		for _, h := range entry.Request.Headers {
 			if !strings.HasPrefix(h.Name, ":") && h.Name != "Cookie" {
