@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/mrichman/hargo"
+	"github.com/p1ass/hargo"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
